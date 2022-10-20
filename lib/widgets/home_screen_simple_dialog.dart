@@ -1,15 +1,16 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_with_graphql/models/button_color_model.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../models/price_model.dart';
+import '../models/product_model.dart';
+import '../models/product_repository.dart';
+import '../provider_models/function_provider.dart';
+import '../provider_models/price_model.dart';
+import '../screens/cart_screen.dart';
 
-Widget dialogForHomeScreen(BuildContext context, QueryResult result,
-    int index) {
+Widget dialogForHomeScreen(
+    BuildContext context, QueryResult result, int index) {
   context.read<PriceModel>().openSP();
-  context.read<ButtonModel>().openModel();
   return SimpleDialog(
     contentPadding: EdgeInsets.zero,
     children: [
@@ -18,17 +19,14 @@ Widget dialogForHomeScreen(BuildContext context, QueryResult result,
         width: 400,
         child: Image.network(
             result.data?['products']['edges'][index]['node']['thumbnail']
-            ['url'],
+                ['url'],
             fit: BoxFit.fill),
       ),
       Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
           result.data?['products']['edges'][index]['node']['name'],
-          style: Theme
-              .of(context)
-              .textTheme
-              .headline6,
+          style: Theme.of(context).textTheme.headline6,
         ),
       ),
       const Text('Select type:'),
@@ -44,14 +42,11 @@ Widget dialogForHomeScreen(BuildContext context, QueryResult result,
                     padding: const EdgeInsets.all(5),
                     child: OutlinedButton(
                       onPressed: () {
-                        context.read<PriceModel>().changeSP(index);
-                        context.read<ButtonModel>().changeModel();
+                        Provider.of<PriceModel>(context, listen: false)
+                            .changeSP(index);
                       },
                       child: Text(
                           '${context.watch<PriceModel>().type[index]} ${context.watch<PriceModel>().price[index]}\$'),
-                      style: OutlinedButton.styleFrom(
-                        primary: context.watch<ButtonModel>().borderColor,
-                      ),
                     ),
                   );
                 },
@@ -62,18 +57,31 @@ Widget dialogForHomeScreen(BuildContext context, QueryResult result,
           alignment: Alignment.center,
           child: Wrap(
             children: [
-              FlatButton(onPressed: () {
-                context.read<ButtonModel>().closeModel(context);
-                context.read<PriceModel>().closeSP(context);
-              },
-                  color: context.watch<ButtonModel>().buttonColor,
-                  child: Text('Add ${context.watch<PriceModel>().selectedProduct} to cart')
+              ElevatedButton(
+                  onPressed: () {
+                    Provider.of<PriceModel>(context, listen: false)
+                        .closeSP(context);
+                    ProductRepository.productModelList.add(ProductModel(
+                      name: result.data?['products']['edges'][index]['node']
+                          ['name'],
+                      cost: Provider.of<PriceModel>(context, listen: false)
+                          .selectedPrice,
+                      imageUrl: result.data?['products']['edges'][index]['node']
+                          ['thumbnail']['url'],
+                    ));
+                    sum = sum + Provider.of<PriceModel>(context, listen: false)
+                        .selectedPrice;
+                    Navigator.of(context).pushReplacementNamed('/cart');
+                  },
+                  child: Text(
+                      'Add ${context.watch<PriceModel>().selectedProduct} to cart')),
+              const SizedBox(
+                width: 60,
               ),
-              const SizedBox(width: 60,),
-              RaisedButton(onPressed: () {
-                context.read<ButtonModel>().closeModel(context);
-                context.read<PriceModel>().closeSP(context);
-              },
+              OutlinedButton(
+                  onPressed: () {
+                    context.read<PriceModel>().closeSP(context);
+                  },
                   child: const Text('Cancel'))
             ],
           ),

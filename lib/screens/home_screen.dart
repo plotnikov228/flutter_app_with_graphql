@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app_with_graphql/graphql_models/products_graphql_model.dart';
 import 'package:flutter_app_with_graphql/widgets/home_screen_simple_dialog.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:provider/provider.dart';
+
+import '../models/product_repository.dart';
+import '../provider_models/function_provider.dart';
+import '../widgets/cart_icon_button.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -13,6 +18,12 @@ class HomeScreen extends StatelessWidget {
         title: const Text('SALEOR.IO',style: TextStyle(color: Colors.black),),
         backgroundColor: Colors.white,
         centerTitle: true,
+        actions: <Widget>[
+          Padding(padding: const EdgeInsets.only(top: 10),
+          child:
+          cartIcon(ProductRepository.productModelList, context)
+          )
+        ],
       ),
       body: Query(
         options: QueryOptions(document: gql(productsGraphQL)),
@@ -22,7 +33,7 @@ class HomeScreen extends StatelessWidget {
           }
           if (result.isLoading) {
             return const Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator( color: Colors.black,),
             );
           }
 
